@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Batch Rental Cycles - OData Query</title>
+    <style>
+        /* Dark Mode Professional Theme */
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #656d76;
+            --accent-primary: #238636;
+            --accent-secondary: #1f6feb;
+            --border-color: #30363d;
+            --hover-bg: #30363d;
+            --success-color: #238636;
+            --error-color: #da3633;
+            --warning-color: #f85149;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Controls Section */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-container,
+        .filter-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Input Styles */
+        .search-input,
+        .select-input {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input {
+            width: 300px;
+        }
+
+        .search-input:focus,
+        .select-input:focus {
+            outline: none;
+            border-color: var(--accent-secondary);
+            box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1a56db;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--hover-bg);
+            border-color: var(--text-secondary);
+        }
+
+        /* Status Messages */
+        .status-container {
+            margin-bottom: 20px;
+            min-height: 40px;
+        }
+
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .status-success {
+            background-color: rgba(35, 134, 54, 0.15);
+            color: var(--success-color);
+            border: 1px solid rgba(35, 134, 54, 0.3);
+        }
+
+        .status-error {
+            background-color: rgba(218, 54, 51, 0.15);
+            color: var(--error-color);
+            border: 1px solid rgba(218, 54, 51, 0.3);
+        }
+
+        .status-info {
+            background-color: rgba(31, 111, 235, 0.15);
+            color: var(--accent-secondary);
+            border: 1px solid rgba(31, 111, 235, 0.3);
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--accent-secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .data-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px 0;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .record-count {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-container,
+            .filter-container {
+                justify-content: center;
+            }
+            
+            .search-input {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .pagination-container {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Invoice Batch Rental Cycles</h1>
+            <p class="subtitle">OData Query Interface</p>
+        </header>
+
+        <div class="controls">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search results..." class="search-input">
+                <button id="searchBtn" class="btn btn-primary">Search</button>
+            </div>
+            
+            <div class="filter-container">
+                <select id="limitSelect" class="select-input">
+                    <option value="50">Show 50 records</option>
+                    <option value="100">Show 100 records</option>
+                    <option value="250">Show 250 records</option>
+                    <option value="500">Show 500 records</option>
+                </select>
+                <button id="refreshBtn" class="btn btn-secondary">Refresh Data</button>
+            </div>
+        </div>
+
+        <div class="status-container">
+            <div id="statusMessage" class="status-message"></div>
+            <div id="loadingSpinner" class="loading-spinner hidden">
+                <div class="spinner"></div>
+                <span>Loading data...</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="dataTable" class="data-table">
+                <thead id="tableHead">
+                    <!-- Headers will be populated dynamically -->
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-container">
+            <div id="recordCount" class="record-count"></div>
+            <div id="paginationControls" class="pagination-controls">
+                <!-- Pagination will be added dynamically if needed -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            BASE_URL: 'https://na1-odata-prd-1-app.azurewebsites.net/odata/a6a02b65c5ee47184aa6cde46840fbdaf73eb5c67f8e302d4bd19a1ada571fc3/RiTinIMLv_27R9fjOfoXRgrxJLdcv5lz4Ys3SjL7q4Q/dbo',
+            ENDPOINT: 'InvoiceBatchRentalCycles',
+            TOKEN: 'blBvQzlJSElUbkoyZmxIWWp1cHR3RjdUYmI5VkJWWWU6',
+            DEFAULT_LIMIT: 50,
+            MAX_RETRIES: 3,
+            TIMEOUT: 30000,
+            MAX_CELL_LENGTH: 100,
+            DATE_COLUMNS: ['CreatedDate', 'ModifiedDate', 'Date', 'StartDate', 'EndDate'],
+            MESSAGES: {
+                LOADING: 'Loading data...',
+                SUCCESS: 'Data loaded successfully',
+                NO_DATA: 'No data found',
+                ERROR_GENERIC: 'An error occurred while fetching data',
+                ERROR_NETWORK: 'Network error - please check your connection',
+                ERROR_AUTH: 'Authentication failed - please check your credentials',
+                ERROR_TIMEOUT: 'Request timed out - please try again',
+                SEARCH_NO_RESULTS: 'No results found for your search'
+            }
+        };
+
+        // API Class
+        class ODataAPI {
+            constructor() {
+                this.baseUrl = `${CONFIG.BASE_URL}/${CONFIG.ENDPOINT}`;
+                this.headers = {
+                    'Authorization': `Basic ${CONFIG.TOKEN}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+            }
+
+            buildODataQuery(options = {}) {
+                const params = new URLSearchParams();
+                
+                if (options.filter) params.append('$filter', options.filter);
+                if (options.orderby) params.append('$orderby', options.orderby);
+                if (options.top) params.append('$top', options.top);
+                if (options.skip) params.append('$skip', options.skip);
+                if (options.select) params.append('$select', options.select);
+                if (options.expand) params.append('$expand', options.expand);
+                if (options.count) params.append('$count', 'true');
+                
+                return params.toString();
+            }
+
+            async fetchData(queryOptions = {}) {
+                try {
+                    const queryString = this.buildODataQuery({
+                        top: queryOptions.limit || CONFIG.DEFAULT_LIMIT,
+                        skip: queryOptions.skip || 0,
+                        filter: queryOptions.filter,
+                        orderby: queryOptions.orderby,
+                        count: true,
+                        ...queryOptions
+                    });
+                    
+                    const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
+                    
+                    console.log('Fetching data from:', url);
+                    
+                    const response = await this.makeRequest(url);
+                    
+                    return {
+                        success: true,
+                        data: response.value || response,
+                        totalCount: response['@odata.count'] || (response.value ? response.value.length : 0),
+                        nextLink: response['@odata.nextLink'] || null
+                    };
+                    
+                } catch (error) {
+                    console.error('API Error:', error);
+                    return {
+                        success: false,
+                        error: this.handleError(error),
+                        data: [],
+                        totalCount: 0
+                    };
+                }
+            }
+
+            async makeRequest(url, retryCount = 0) {
+                const requestOptions = {
+                    method: 'GET',
+                    headers: this.headers
+                };
+
+                try {
+                    const response = await fetch(url, requestOptions);
+
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            throw new Error('Authentication failed');
+                        }
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data;
+
+                } catch (error) {
+                    if (retryCount < CONFIG.MAX_RETRIES && !error.message.includes('Authentication')) {
+                        console.log(`Retrying request (${retryCount + 1}/${CONFIG.MAX_RETRIES})`);
+                        await this.delay(1000 * (retryCount + 1));
+                        return this.makeRequest(url, retryCount + 1);
+                    }
+
+                    throw error;
+                }
+            }
+
+            handleError(error) {
+                if (error.message.includes('Authentication')) {
+                    return CONFIG.MESSAGES.ERROR_AUTH;
+                } else if (error.message.includes('timeout')) {
+                    return CONFIG.MESSAGES.ERROR_TIMEOUT;
+                } else if (error.message.includes('Failed to fetch')) {
+                    return CONFIG.MESSAGES.ERROR_NETWORK;
+                } else {
+                    return `${CONFIG.MESSAGES.ERROR_GENERIC}: ${error.message}`;
+                }
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // UI Manager Class
+        class UIManager {
+            constructor() {
+                this.statusMessage = document.getElementById('statusMessage');
+                this.loadingSpinner = document.getElementById('loadingSpinner');
+                this.tableHead = document.getElementById('tableHead');
+                this.tableBody = document.getElementById('tableBody');
+                this.recordCount = document.getElementById('recordCount');
+                this.searchInput = document.getElementById('searchInput');
+                this.currentData = [];
+                this.filteredData = [];
+            }
+
+            showLoading() {
+                this.loadingSpinner.classList.remove('hidden');
+                this.hideStatusMessage();
+            }
+
+            hideLoading() {
+                this.loadingSpinner.classList.add('hidden');
+            }
+
+            showStatusMessage(message, type = 'info') {
+                this.statusMessage.textContent = message;
+                this.statusMessage.className = `status-message status-${type}`;
+                this.statusMessage.style.display = 'block';
+            }
+
+            hideStatusMessage() {
+                this.statusMessage.style.display = 'none';
+            }
+
+            formatCellValue(value, columnName) {
+                if (value === null || value === undefined) {
+                    return '<em style="color: var(--text-muted);">null</em>';
+                }
+
+                let strValue = String(value);
+
+                // Handle date columns
+                if (CONFIG.DATE_COLUMNS.some(col => columnName.toLowerCase().includes(col.toLowerCase()))) {
+                    try {
+                        const date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                            return date.toLocaleString();
+                        }
+                    } catch (e) {
+                        // Fall through to default handling
+                    }
+                }
+
+                // Truncate long values
+                if (strValue.length > CONFIG.MAX_CELL_LENGTH) {
+                    return `<span title="${strValue}">${strValue.substring(0, CONFIG.MAX_CELL_LENGTH)}...</span>`;
+                }
+
+                return strValue;
+            }
+
+            createTableHeaders(data) {
+                if (!data || data.length === 0) return;
+
+                const excludedColumns = ['InvoiceBatchRentalCycleId', 'LastChangeReasonId', 'RowVersion', 'Guid'];
+                const headers = Object.keys(data[0]).filter(header => !excludedColumns.includes(header));
+                this.tableHead.innerHTML = '';
+                
+                const headerRow = document.createElement('tr');
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    th.style.cursor = 'pointer';
+                    th.title = `Click to sort by ${header}`;
+                    th.addEventListener('click', () => this.sortTable(header));
+                    headerRow.appendChild(th);
+                });
+                
+                this.tableHead.appendChild(headerRow);
+            }
+
+            populateTable(data) {
+                this.currentData = data;
+                this.filteredData = [...data];
+                
+                if (!data || data.length === 0) {
+                    this.tableBody.innerHTML = '<tr><td colspan="100%" style="text-align: center; padding: 40px; color: var(--text-muted);">No data available</td></tr>';
+                    this.recordCount.textContent = 'No records found';
+                    return;
+                }
+
+                this.createTableHeaders(data);
+                this.renderTableRows(data);
+                this.updateRecordCount(data.length);
+            }
+
+            renderTableRows(data) {
+                this.tableBody.innerHTML = '';
+                
+                if (!data || data.length === 0) {
+                    this.tableBody.innerHTML = '<tr><td colspan="100%" style="text-align: center; padding: 40px; color: var(--text-muted);">No data available</td></tr>';
+                    return;
+                }
+
+                const excludedColumns = ['InvoiceBatchRentalCycleId', 'LastChangeReasonId', 'RowVersion', 'Guid'];
+                const headers = Object.keys(data[0]).filter(header => !excludedColumns.includes(header));
+                
+                data.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('fade-in');
+                    
+                    headers.forEach(header => {
+                        const td = document.createElement('td');
+                        td.innerHTML = this.formatCellValue(row[header], header);
+                        tr.appendChild(td);
+                    });
+                    
+                    this.tableBody.appendChild(tr);
+                });
+            }
+
+            updateRecordCount(count, total = null) {
+                if (total !== null) {
+                    this.recordCount.textContent = `Showing ${count} of ${total} records`;
+                } else {
+                    this.recordCount.textContent = `${count} records found`;
+                }
+            }
+
+            sortTable(column) {
+                const isAscending = this.tableHead.querySelector(`th[data-sort="${column}"]`)?.classList.contains('asc');
+                
+                // Remove previous sort indicators
+                this.tableHead.querySelectorAll('th').forEach(th => {
+                    th.classList.remove('asc', 'desc');
+                    th.removeAttribute('data-sort');
+                });
+
+                // Add sort indicator to current column
+                const currentHeader = Array.from(this.tableHead.querySelectorAll('th')).find(th => th.textContent === column);
+                if (currentHeader) {
+                    currentHeader.setAttribute('data-sort', column);
+                    currentHeader.classList.add(isAscending ? 'desc' : 'asc');
+                }
+
+                // Sort the data
+                this.filteredData.sort((a, b) => {
+                    let aVal = a[column];
+                    let bVal = b[column];
+                    
+                    // Handle null/undefined values
+                    if (aVal === null || aVal === undefined) aVal = '';
+                    if (bVal === null || bVal === undefined) bVal = '';
+                    
+                    // Try to parse as numbers
+                    const aNum = parseFloat(aVal);
+                    const bNum = parseFloat(bVal);
+                    
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return isAscending ? bNum - aNum : aNum - bNum;
+                    }
+                    
+                    // String comparison
+                    const result = String(aVal).localeCompare(String(bVal));
+                    return isAscending ? -result : result;
+                });
+
+                this.renderTableRows(this.filteredData);
+            }
+
+            filterData(searchTerm) {
+                if (!searchTerm.trim()) {
+                    this.filteredData = [...this.currentData];
+                } else {
+                    const term = searchTerm.toLowerCase();
+                    this.filteredData = this.currentData.filter(row => {
+                        return Object.values(row).some(value => {
+                            if (value === null || value === undefined) return false;
+                            return String(value).toLowerCase().includes(term);
+                        });
+                    });
+                }
+
+                this.renderTableRows(this.filteredData);
+                this.updateRecordCount(this.filteredData.length, this.currentData.length);
+
+                if (this.filteredData.length === 0 && searchTerm.trim()) {
+                    this.showStatusMessage(CONFIG.MESSAGES.SEARCH_NO_RESULTS, 'info');
+                } else {
+                    this.hideStatusMessage();
+                }
+            }
+        }
+
+        // Application Class
+        class App {
+            constructor() {
+                this.api = new ODataAPI();
+                this.ui = new UIManager();
+                this.searchTimeout = null;
+                this.currentLimit = CONFIG.DEFAULT_LIMIT;
+                
+                this.initializeEventListeners();
+                this.loadInitialData();
+            }
+
+            initializeEventListeners() {
+                // Search functionality
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        this.ui.filterData(e.target.value);
+                    }, 300);
+                });
+
+                document.getElementById('searchBtn').addEventListener('click', () => {
+                    this.ui.filterData(document.getElementById('searchInput').value);
+                });
+
+                // Limit selection
+                document.getElementById('limitSelect').addEventListener('change', (e) => {
+                    this.currentLimit = parseInt(e.target.value);
+                    this.loadData();
+                });
+
+                // Refresh button
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.loadData();
+                });
+
+                // Enter key in search
+                document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.ui.filterData(e.target.value);
+                    }
+                });
+            }
+
+            async loadInitialData() {
+                await this.loadData();
+            }
+
+            async loadData(options = {}) {
+                this.ui.showLoading();
+                this.ui.hideStatusMessage();
+
+                try {
+                    const queryOptions = {
+                        limit: this.currentLimit,
+                        ...options
+                    };
+
+                    const result = await this.api.fetchData(queryOptions);
+
+                    if (result.success) {
+                        if (result.data && result.data.length > 0) {
+                            this.ui.populateTable(result.data);
+                            this.ui.showStatusMessage(
+                                `${CONFIG.MESSAGES.SUCCESS} (${result.data.length} records)`, 
+                                'success'
+                            );
+                        } else {
+                            this.ui.populateTable([]);
+                            this.ui.showStatusMessage(CONFIG.MESSAGES.NO_DATA, 'info');
+                        }
+                    } else {
+                        this.ui.populateTable([]);
+                        this.ui.showStatusMessage(result.error, 'error');
+                    }
+
+                } catch (error) {
+                    console.error('Application Error:', error);
+                    this.ui.populateTable([]);
+                    this.ui.showStatusMessage(
+                        `${CONFIG.MESSAGES.ERROR_GENERIC}: ${error.message}`, 
+                        'error'
+                    );
+                } finally {
+                    this.ui.hideLoading();
+                }
+            }
+        }
+
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new App();
+        });
+    </script>
+</body>
+</html>
